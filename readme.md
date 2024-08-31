@@ -1,6 +1,6 @@
 ### **dbbench**, database benchmarking tool for RDBMS
 
-**dbbench** is based on Spring JPA and supposes to be database agnostic benchmarking tool.
+**dbbench** is inspired by `pgbench`, written using Java and Spring JPA, serves the purpose as a database agnostic benchmarking tool.
 
 1. Clone the git repository
 
