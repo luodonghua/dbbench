@@ -64,7 +64,8 @@ public class DbBench {
         this.historyRepo = historyRepo;
     }
 
-    
+    @Autowired
+    private DatabaseStatisticsUpdater statisticsUpdater;
     
     public static void main(String[] args) {
         SpringApplication.run(DbBench.class, args);
@@ -130,6 +131,10 @@ public class DbBench {
                 long endTime = System.currentTimeMillis();
                 double elapsedTimeSeconds = (endTime - startTime) / 1000.0;
                 logger.info("Data initialization completed in {} seconds.", elapsedTimeSeconds);
+                
+                // update statistics based on common used database engines
+                statisticsUpdater.updateStatistics();
+
             } else {
                 logger.info("Data initialization skipped.");
             }
