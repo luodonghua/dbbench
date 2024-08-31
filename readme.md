@@ -14,7 +14,7 @@ git clone https://github.com/luodonghua/dbbench.git
 cd dbbench/benchmark
 ```
 
-3. Compile this project
+3. Compile this project using Maven
 
 ```bash
 mvn compile
