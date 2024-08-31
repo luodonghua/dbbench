@@ -1,4 +1,4 @@
-### dbbench, database benchmarking tool for RDBMS
+### **dbbench**, database benchmarking tool for RDBMS
 
 **dbbench** is based on Spring JPA and supposes to be database agnostic benchmarking too.
 
