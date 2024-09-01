@@ -25,8 +25,10 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -152,6 +154,18 @@ public class DbBench {
             return false;
     }
 
+    private void reportTPS(AtomicLong lastReportTime, AtomicInteger lastReportCount, AtomicInteger totalCount) {
+        long currentTime = System.currentTimeMillis();
+        long lastTime = lastReportTime.getAndSet(currentTime);
+        int lastCount = lastReportCount.getAndSet(totalCount.get());
+        
+        double elapsedSeconds = (currentTime - lastTime) / 1000.0;
+        int transactionsInInterval = totalCount.get() - lastCount;
+        double tps = transactionsInInterval / elapsedSeconds;
+        
+        logger.info("Transactions per Second (last 10s): " + String.format("%.2f", tps));
+    }
+    
     @Bean
     public CommandLineRunner runLoadTest(DbBench dbBench) {
     return args -> {
@@ -169,12 +183,21 @@ public class DbBench {
     };
     }   
 
+
+
     public void runLoadTest(String executionMode, int numThreads, int transactionsPerThread, int runTimeSeconds) {
         
 
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         AtomicInteger completedTransactions = new AtomicInteger(0);
+        AtomicLong lastReportTime = new AtomicLong(System.currentTimeMillis());
+        AtomicInteger lastReportCount = new AtomicInteger(0);
         long startTime = System.currentTimeMillis();
+    
+        // Start the reporting thread
+        ScheduledExecutorService reportingExecutor = Executors.newSingleThreadScheduledExecutor();
+        reportingExecutor.scheduleAtFixedRate(() -> reportTPS(lastReportTime, lastReportCount, completedTransactions), 
+                                              10, 10, TimeUnit.SECONDS);
 
         // skip if current execution mode for data initiation
         if ("init-data".equalsIgnoreCase(config.getExecutionMode())) {
@@ -208,15 +231,18 @@ public class DbBench {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+        
+        reportingExecutor.shutdown();
 
+        // Final report
         long endTime = System.currentTimeMillis();
-        double elapsedTimeSeconds = (endTime - startTime) / 1000.0;
-        double tps = completedTransactions.get() / elapsedTimeSeconds;
+        double totalElapsedTimeSeconds = (endTime - startTime) / 1000.0;
+        double overallTps = completedTransactions.get() / totalElapsedTimeSeconds;
 
-        logger.info("'{}' Load Test Results:", executionMode);
+        logger.info("Final '{}' Load Test Results:", executionMode);
         logger.info("Total Transactions: " + completedTransactions.get());
-        logger.info("Elapsed Time: " + elapsedTimeSeconds + " seconds");
-        logger.info("Transactions per Second: " + String.format("%.3f", tps));
+        logger.info("Total Elapsed Time: " + totalElapsedTimeSeconds + " seconds");
+        logger.info("Overall Transactions per Second: " + String.format("%.2f", overallTps));
     }
 
     @Transactional
