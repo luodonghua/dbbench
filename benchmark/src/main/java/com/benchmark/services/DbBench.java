@@ -174,6 +174,12 @@ public class DbBench {
             logger.error("Table is empty. Run data initialization first.");
             return;
         }
+
+        if ("init-data".equalsIgnoreCase(config.getExecutionMode())) {
+            logger.info("Load testing skipped during data initialization phase");
+            return;
+        }
+
         // Then run the load test
         String executionMode = config.getExecutionMode();
         int numThreads = config.getLoadTestThreads();
@@ -184,10 +190,8 @@ public class DbBench {
     }   
 
 
-
     public void runLoadTest(String executionMode, int numThreads, int transactionsPerThread, int runTimeSeconds) {
         
-
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         AtomicInteger completedTransactions = new AtomicInteger(0);
         AtomicLong lastReportTime = new AtomicLong(System.currentTimeMillis());
