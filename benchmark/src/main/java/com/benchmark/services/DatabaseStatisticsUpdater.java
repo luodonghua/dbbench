@@ -84,7 +84,10 @@ public class DatabaseStatisticsUpdater {
 
     private void updateSQLServerStatistics() {
         logger.info("Updating SQL Server statistics...");
-        jdbcTemplate.execute("EXEC sp_updatestats");
+        String[] tables = {"dbbench_accounts", "dbbench_branches", "dbbench_tellers", "dbbench_history"};
+        for (String table : tables) {
+            jdbcTemplate.execute("UPDATE STATISTICS " + table);
+        }
         logger.info("SQL Server statistics updated successfully.");
     }
 }
